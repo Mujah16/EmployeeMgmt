@@ -61,7 +61,7 @@ stages:
           - task: AzureFunctionApp@2
             displayName: 'Deploy Azure Function'
             inputs:
-              azureSubscription: 'b9f73b00-2fd9-4975-bdef-dae61e670773'
+              azureSubscription: 'c0d515eb-caa1-4e41-a241-4873efbc2b59'
               appType: 'functionApp'
               appName: 'empmgmt-func-app'
               package: '$(Pipeline.Workspace)/$(artifactName)/function/*.zip'
