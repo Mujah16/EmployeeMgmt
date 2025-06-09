@@ -1,0 +1,8 @@
+az_resources.sh
+.vscode/extensions.json
+.vscode/launch.json
+.vscode/tasks.json
+api/appsettings.Development.json
+api/Properties/launchSettings.json
+function/ProcessFileFunction/Properties/launchSettings.json
+function/ProcessFileFunction/host.json
