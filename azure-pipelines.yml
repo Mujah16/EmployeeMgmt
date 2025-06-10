@@ -3,7 +3,6 @@ trigger:
 
 pool:
   vmImage: 'ubuntu-latest'
-  name: 'Default'
 
 variables:
   buildConfiguration: 'Release'
@@ -26,12 +25,23 @@ stages:
     - script: dotnet restore
       displayName: 'Restore NuGet packages'
 
+    - script: dotnet build $(apiProject) --configuration $(buildConfiguration) --no-restore
+      displayName: 'Build API'
 
     - script: dotnet build $(functionProject) --configuration $(buildConfiguration) --no-restore
       displayName: 'Build Azure Function'
 
     - script: dotnet test --no-build --verbosity normal
       displayName: 'Run Tests'
+
+    - task: DotNetCoreCLI@2
+      displayName: 'Publish API'
+      inputs:
+        command: 'publish'
+        publishWebProjects: false
+        projects: '$(apiProject)'
+        arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/api'
+        zipAfterPublish: true
 
     - task: DotNetCoreCLI@2
       displayName: 'Publish Azure Function'
@@ -49,6 +59,22 @@ stages:
   displayName: 'Deploy Stage'
   dependsOn: Build
   jobs:
+  - deployment: DeployAPI
+    displayName: 'Deploy API to Azure Web App'
+    environment: 'production'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - download: current
+            artifact: $(artifactName)
+          - task: AzureWebApp@1
+            displayName: 'Deploy API'
+            inputs:
+              azureSubscription: '<Your Azure Service Connection Name>'
+              appType: 'webApp'
+              appName: '<Your API App Service Name>'
+              package: '$(Pipeline.Workspace)/$(artifactName)/api/*.zip'
 
   - deployment: DeployFunction
     displayName: 'Deploy Azure Function'
@@ -62,7 +88,7 @@ stages:
           - task: AzureFunctionApp@2
             displayName: 'Deploy Azure Function'
             inputs:
-              azureSubscription: 'c0d515eb-caa1-4e41-a241-4873efbc2b59'
+              azureSubscription: '<Your Azure Service Connection Name>'
               appType: 'functionApp'
-              appName: 'empmgmt-func-app'
+              appName: '<Your Function App Name>'
               package: '$(Pipeline.Workspace)/$(artifactName)/function/*.zip'
